@@ -1,0 +1,2227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Refbase — Personal Reference Database</title>
+  <style>
+    /* ================================================================
+       DESIGN TOKENS
+    ================================================================ */
+    :root {
+      --bg:            #080810;
+      --surface:       #0f0f1a;
+      --card:          #15151f;
+      --card-hover:    #1c1c2c;
+      --border:        #252535;
+      --border-subtle: #1c1c28;
+      --accent:        #6366f1;
+      --accent-dim:    #4f52d6;
+      --accent-glow:   rgba(99, 102, 241, 0.12);
+      --accent-glow2:  rgba(99, 102, 241, 0.25);
+      --text:          #e2e2f0;
+      --text-muted:    #8080a0;
+      --text-faint:    #404060;
+      --success:       #22c55e;
+      --danger:        #ef4444;
+      --warn:          #f59e0b;
+      --radius:        10px;
+      --radius-sm:     6px;
+      --radius-xs:     4px;
+      --sidebar-w:     248px;
+      --ease:          cubic-bezier(0.16, 1, 0.3, 1);
+      --t:             0.18s;
+    }
+
+    /* ================================================================
+       RESET
+    ================================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100%;
+      overflow: hidden;
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; }
+
+    /* ================================================================
+       SCROLLBAR
+    ================================================================ */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+
+    /* ================================================================
+       LAYOUT
+    ================================================================ */
+    #app { display: flex; height: 100vh; }
+
+    /* ================================================================
+       SIDEBAR
+    ================================================================ */
+    #sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: transform var(--t) var(--ease);
+      position: relative;
+      z-index: 100;
+    }
+
+    .sidebar-header {
+      padding: 18px 14px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    /* Logo */
+    .app-logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 14px;
+      text-decoration: none;
+    }
+    .logo-mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+      box-shadow: 0 0 0 1px rgba(99,102,241,0.3), 0 4px 12px rgba(99,102,241,0.2);
+    }
+    .logo-text {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+    .logo-text em { color: var(--accent); font-style: normal; }
+
+    /* Add button */
+    #add-btn {
+      width: 100%;
+      padding: 9px 12px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background var(--t), transform var(--t), box-shadow var(--t);
+      box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+      letter-spacing: 0.1px;
+    }
+    #add-btn:hover {
+      background: var(--accent-dim);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(99,102,241,0.4);
+    }
+    #add-btn:active { transform: translateY(0); box-shadow: none; }
+    .add-btn-icon {
+      font-size: 18px;
+      line-height: 1;
+      font-weight: 300;
+    }
+
+    /* Sidebar scroll area */
+    .sidebar-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 0 4px;
+    }
+
+    .sidebar-section {
+      padding: 0 8px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      padding: 6px 8px 4px;
+      user-select: none;
+    }
+
+    /* Nav item base */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 8px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background var(--t), color var(--t);
+      color: var(--text-muted);
+      font-size: 13px;
+      user-select: none;
+      gap: 6px;
+    }
+    .nav-item:hover { background: var(--card); color: var(--text); }
+    .nav-item.active {
+      background: var(--accent-glow);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .nav-item-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+      flex: 1;
+    }
+    .nav-item-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .nav-count {
+      font-size: 11px;
+      color: var(--text-faint);
+      background: rgba(255,255,255,0.04);
+      padding: 1px 6px;
+      border-radius: 10px;
+      flex-shrink: 0;
+      font-weight: 500;
+    }
+    .nav-item.active .nav-count {
+      color: var(--accent);
+      background: var(--accent-glow2);
+    }
+
+    .col-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* New collection button */
+    .new-col-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 8px;
+      color: var(--text-faint);
+      cursor: pointer;
+      font-size: 13px;
+      border-radius: var(--radius-sm);
+      transition: color var(--t), background var(--t);
+    }
+    .new-col-btn:hover { color: var(--text-muted); background: var(--card); }
+
+    /* Type filter badge dot */
+    .type-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Sidebar footer */
+    .sidebar-footer {
+      padding: 10px 12px 14px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .footer-btn {
+      flex: 1;
+      padding: 7px 6px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-faint);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color var(--t), border-color var(--t), background var(--t);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .footer-btn:hover {
+      color: var(--text-muted);
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    .sidebar-divider {
+      height: 1px;
+      background: var(--border-subtle);
+      margin: 4px 8px 8px;
+    }
+
+    /* ================================================================
+       MAIN CONTENT
+    ================================================================ */
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    /* Topbar */
+    #topbar {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .topbar-title {
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+      color: var(--text);
+      letter-spacing: -0.2px;
+      min-width: 120px;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+    }
+    .search-icon-el {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-faint);
+      font-size: 13px;
+      pointer-events: none;
+    }
+    #search-input {
+      width: 100%;
+      padding: 8px 10px 8px 32px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color var(--t);
+    }
+    #search-input::placeholder { color: var(--text-faint); }
+    #search-input:focus { border-color: var(--accent); }
+
+    .topbar-actions { display: flex; align-items: center; gap: 4px; }
+
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 15px;
+      transition: border-color var(--t), color var(--t), background var(--t);
+      flex-shrink: 0;
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .icon-btn.active {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    #menu-toggle { display: none; }
+
+    /* Active tag filter bar */
+    #tag-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px 20px 0;
+    }
+    #tag-bar:empty { display: none; }
+
+    .tag-filter-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      background: var(--accent-glow);
+      border: 1px solid rgba(99,102,241,0.4);
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--accent);
+      cursor: pointer;
+      transition: opacity var(--t);
+    }
+    .tag-filter-pill:hover { opacity: 0.7; }
+
+    /* Content area */
+    #content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px 20px 20px;
+      position: relative;
+    }
+
+    /* ================================================================
+       EMPTY STATE
+    ================================================================ */
+    #empty-state {
+      display: none;
+      position: absolute;
+      inset: 0;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: var(--text-faint);
+      text-align: center;
+      padding: 40px;
+    }
+    #empty-state.show { display: flex; }
+    .empty-icon { font-size: 52px; opacity: 0.35; line-height: 1; }
+    .empty-title { font-size: 17px; font-weight: 700; color: var(--text-muted); }
+    .empty-body { font-size: 13px; max-width: 300px; line-height: 1.7; color: var(--text-faint); }
+    .empty-cta {
+      margin-top: 6px;
+      padding: 9px 22px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--t);
+    }
+    .empty-cta:hover { background: var(--accent-dim); }
+
+    /* ================================================================
+       REFERENCE GRID
+    ================================================================ */
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+      gap: 14px;
+    }
+    #grid.list { grid-template-columns: 1fr; }
+
+    /* ================================================================
+       REFERENCE CARD — GRID
+    ================================================================ */
+    .ref-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition:
+        border-color var(--t),
+        transform 0.2s var(--ease),
+        box-shadow 0.2s var(--ease);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .ref-card:hover {
+      border-color: rgba(99,102,241,0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+    }
+
+    .card-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      background: var(--surface);
+      display: block;
+      flex-shrink: 0;
+    }
+    .card-thumb-placeholder {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: linear-gradient(135deg, var(--surface) 0%, var(--card-hover) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: var(--text-faint);
+      flex-shrink: 0;
+    }
+
+    /* Overlay badges on thumbnail */
+    .card-top-badges {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      right: 8px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+    .type-badge {
+      padding: 2px 7px;
+      border-radius: var(--radius-xs);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: #fff;
+      pointer-events: none;
+      backdrop-filter: blur(6px);
+    }
+
+    /* Quick actions (right side of thumb) */
+    .card-actions {
+      display: flex;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity var(--t);
+      pointer-events: all;
+    }
+    .ref-card:hover .card-actions { opacity: 1; }
+    .qbtn {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(8, 8, 16, 0.8);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 13px;
+      cursor: pointer;
+      transition: color var(--t), border-color var(--t);
+      flex-shrink: 0;
+    }
+    .qbtn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+    .qbtn.del:hover { color: var(--danger); border-color: rgba(239,68,68,0.4); }
+
+    /* Card body */
+    .card-body {
+      padding: 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.55;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 2px;
+    }
+    .tag-pill {
+      font-size: 11px;
+      padding: 1px 7px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      color: var(--text-faint);
+      cursor: pointer;
+      transition: border-color var(--t), color var(--t);
+    }
+    .tag-pill:hover { border-color: var(--accent); color: var(--accent); }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: auto;
+      padding-top: 7px;
+    }
+    .col-pill {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: var(--radius-xs);
+      font-weight: 500;
+      color: #fff;
+      opacity: 0.85;
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .card-date {
+      font-size: 10px;
+      color: var(--text-faint);
+      margin-left: auto;
+    }
+
+    /* ================================================================
+       LIST VIEW CARD OVERRIDES
+    ================================================================ */
+    #grid.list .ref-card {
+      flex-direction: row;
+      align-items: stretch;
+      min-height: 72px;
+    }
+    #grid.list .card-thumb,
+    #grid.list .card-thumb-placeholder {
+      width: 110px;
+      min-width: 110px;
+      aspect-ratio: unset;
+      min-height: 72px;
+    }
+    #grid.list .card-top-badges { top: 6px; left: 6px; right: 6px; }
+    #grid.list .card-actions { opacity: 1; }
+    #grid.list .card-body {
+      flex-direction: row;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px 14px;
+    }
+    #grid.list .card-title {
+      flex: 1;
+      min-width: 180px;
+      -webkit-line-clamp: 1;
+    }
+    #grid.list .card-desc { display: none; }
+    #grid.list .card-tags { flex-wrap: nowrap; overflow: hidden; }
+    #grid.list .card-footer { margin-top: 0; padding-top: 0; }
+
+    /* ================================================================
+       MODAL SYSTEM
+    ================================================================ */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 92vh;
+      overflow-y: auto;
+      transform: translateY(12px) scale(0.97);
+      transition: transform 0.22s var(--ease);
+      position: relative;
+    }
+    .overlay.open .modal { transform: translateY(0) scale(1); }
+    .modal.sm { max-width: 380px; }
+    .modal.xs { max-width: 340px; }
+
+    .modal-head {
+      padding: 20px 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .modal-title { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+    .close-btn {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+      transition: color var(--t);
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .close-btn:hover { color: var(--text); }
+
+    .modal-body { padding: 0 20px 20px; }
+
+    /* ================================================================
+       FORMS
+    ================================================================ */
+    .form-group { margin-bottom: 13px; }
+    .label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+    .label-opt {
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--text-faint);
+      font-size: 11px;
+    }
+    .input {
+      width: 100%;
+      padding: 9px 11px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color var(--t);
+      -webkit-appearance: none;
+    }
+    .input:focus { border-color: var(--accent); }
+    .input::placeholder { color: var(--text-faint); }
+    textarea.input { resize: vertical; min-height: 72px; }
+    select.input {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236060a0' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 30px;
+      appearance: none;
+    }
+    select.input option { background: #1a1a28; }
+
+    .form-hint { font-size: 11px; color: var(--text-faint); margin-top: 4px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* URL input */
+    .url-row { display: flex; gap: 8px; }
+    .url-row .input { flex: 1; }
+
+    .fetch-btn {
+      padding: 9px 14px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background var(--t);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .fetch-btn:hover { background: var(--accent-dim); }
+    .fetch-btn:disabled { opacity: 0.55; cursor: wait; }
+
+    /* Preview card inside modal */
+    #preview {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 14px;
+      display: none;
+    }
+    #preview.show { display: block; }
+    #preview-img { width: 100%; height: 155px; object-fit: cover; display: block; }
+    .preview-placeholder {
+      width: 100%;
+      height: 155px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      color: var(--text-faint);
+      background: linear-gradient(135deg, var(--surface), var(--card-hover));
+    }
+    .preview-meta { padding: 10px 12px 12px; display: flex; align-items: center; gap: 8px; }
+
+    /* Tags input */
+    .tags-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      padding: 6px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      min-height: 38px;
+      cursor: text;
+      transition: border-color var(--t);
+      align-items: center;
+    }
+    .tags-wrap:focus-within { border-color: var(--accent); }
+    .tag-token {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      background: var(--accent-glow);
+      border: 1px solid rgba(99,102,241,0.35);
+      border-radius: var(--radius-xs);
+      font-size: 12px;
+      color: var(--accent);
+    }
+    .tag-token-x {
+      cursor: pointer;
+      opacity: 0.6;
+      font-size: 15px;
+      line-height: 1;
+      transition: opacity var(--t);
+    }
+    .tag-token-x:hover { opacity: 1; }
+    .tag-real-input {
+      flex: 1;
+      min-width: 80px;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      padding: 1px 4px;
+    }
+    .tag-real-input::placeholder { color: var(--text-faint); }
+
+    /* ================================================================
+       BUTTONS
+    ================================================================ */
+    .btn {
+      padding: 9px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background var(--t), transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-dim); }
+    .btn-ghost { background: var(--card); color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+    .btn-danger {
+      background: rgba(239,68,68,0.12);
+      color: var(--danger);
+      border: 1px solid rgba(239,68,68,0.25);
+    }
+    .btn-danger:hover { background: rgba(239,68,68,0.22); }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
+    /* ================================================================
+       SPINNER
+    ================================================================ */
+    .spin {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.55s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ================================================================
+       TOAST
+    ================================================================ */
+    #toasts {
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 15px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+      animation: toast-in 0.25s var(--ease);
+      max-width: 320px;
+      pointer-events: all;
+    }
+    .toast.success { border-color: rgba(34,197,94,0.4); }
+    .toast.error   { border-color: rgba(239,68,68,0.4); }
+    .toast.warn    { border-color: rgba(245,158,11,0.4); }
+    .toast-icon { font-size: 15px; flex-shrink: 0; }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateX(16px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ================================================================
+       STATUS BAR
+    ================================================================ */
+    #statusbar {
+      padding: 5px 20px;
+      background: var(--surface);
+      border-top: 1px solid var(--border-subtle);
+      font-size: 11px;
+      color: var(--text-faint);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-shrink: 0;
+    }
+    .s-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      flex-shrink: 0;
+    }
+    .s-dot.syncing { background: var(--warn); animation: pulse 0.9s ease infinite; }
+    .s-dot.error   { background: var(--danger); }
+    .s-dot.warn    { background: var(--warn); }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.25; } }
+
+    /* ================================================================
+       COLOR SWATCHES
+    ================================================================ */
+    .swatches { display: flex; flex-wrap: wrap; gap: 7px; }
+    .swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform var(--t), border-color var(--t);
+    }
+    .swatch:hover { transform: scale(1.18); }
+    .swatch.sel { border-color: rgba(255,255,255,0.7); transform: scale(1.1); }
+
+    /* ================================================================
+       MISC
+    ================================================================ */
+    .divider { height: 1px; background: var(--border-subtle); margin: 4px 0 8px; }
+    .confirm-msg { font-size: 13px; color: var(--text-muted); line-height: 1.65; margin-bottom: 20px; }
+
+    /* Sidebar overlay (mobile) */
+    #sidebar-veil {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 99;
+    }
+
+    /* ================================================================
+       RESPONSIVE
+    ================================================================ */
+    @media (max-width: 660px) {
+      #sidebar {
+        position: fixed;
+        left: 0; top: 0;
+        height: 100vh;
+        transform: translateX(-100%);
+      }
+      #sidebar.open { transform: translateX(0); }
+      #sidebar-veil.show { display: block; }
+      #menu-toggle { display: flex; }
+      #grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .topbar-title { display: none; }
+      #topbar { padding: 10px 14px; gap: 8px; }
+      #content { padding: 14px; }
+      #tag-bar { padding: 8px 14px 0; }
+      .modal { border-radius: 12px; }
+      #toasts { right: 12px; bottom: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ============================================================
+       SIDEBAR
+  ============================================================ -->
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <div class="app-logo">
+        <div class="logo-mark">🗂</div>
+        <div class="logo-text">Ref<em>base</em></div>
+      </div>
+      <button id="add-btn" onclick="openAddModal()">
+        <span class="add-btn-icon">+</span> Add Reference
+      </button>
+    </div>
+
+    <div class="sidebar-scroll">
+      <!-- Collections -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">Collections</div>
+
+        <div class="nav-item active"
+             data-ftype="collection" data-fval="all"
+             onclick="applyFilter('collection','all',this)">
+          <div class="nav-item-left">
+            <span>🗃</span>
+            <span class="nav-item-label">All References</span>
+          </div>
+          <span class="nav-count" id="all-count">0</span>
+        </div>
+
+        <div id="col-list"><!-- dynamic --></div>
+
+        <div class="new-col-btn" onclick="openNewColModal()">
+          <span style="font-size:16px;line-height:1">+</span>
+          <span>New Collection</span>
+        </div>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Type filters -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">Type</div>
+        <div id="type-filter-list"><!-- dynamic --></div>
+      </div>
+    </div>
+
+    <!-- Footer actions -->
+    <div class="sidebar-footer">
+      <button class="footer-btn" onclick="openSettings()">⚙ Settings</button>
+      <button class="footer-btn" onclick="exportAll()">↓ Export</button>
+      <label class="footer-btn" for="import-input" style="cursor:pointer">↑ Import</label>
+      <input type="file" id="import-input" accept=".json" style="display:none" onchange="importAll(event)">
+    </div>
+  </aside>
+
+  <!-- Mobile sidebar veil -->
+  <div id="sidebar-veil" onclick="closeMobileSidebar()"></div>
+
+  <!-- ============================================================
+       MAIN
+  ============================================================ -->
+  <main id="main">
+    <div id="topbar">
+      <button class="icon-btn" id="menu-toggle" onclick="toggleMobileSidebar()">☰</button>
+      <div class="topbar-title" id="topbar-title">All References</div>
+      <div class="search-wrap">
+        <span class="search-icon-el">🔍</span>
+        <input type="search" id="search-input" placeholder="Search titles, descriptions, tags…"
+               oninput="onSearch(this.value)" autocomplete="off">
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn active" id="btn-grid" title="Grid view" onclick="setView('grid')">⊞</button>
+        <button class="icon-btn" id="btn-list" title="List view" onclick="setView('list')">≡</button>
+      </div>
+    </div>
+
+    <!-- Active tag filters -->
+    <div id="tag-bar"></div>
+
+    <div id="content">
+      <!-- Empty state -->
+      <div id="empty-state">
+        <div class="empty-icon">🗂</div>
+        <div class="empty-title">Nothing here yet</div>
+        <div class="empty-body">
+          Paste any URL to add a reference. Metadata fetches automatically.
+          Everything syncs to your GitHub repo.
+        </div>
+        <button class="empty-cta" onclick="openAddModal()">+ Add your first reference</button>
+      </div>
+
+      <!-- References -->
+      <div id="grid"></div>
+    </div>
+
+    <!-- Status bar -->
+    <div id="statusbar">
+      <div class="s-dot" id="s-dot"></div>
+      <span id="s-text">Ready</span>
+    </div>
+  </main>
+</div>
+
+<!-- ================================================================
+     MODAL: ADD / EDIT REFERENCE
+================================================================ -->
+<div class="overlay" id="m-add">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="m-add-title">Add Reference</div>
+      <button class="close-btn" onclick="closeModal('m-add')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- URL row (hidden when editing) -->
+      <div class="form-group" id="url-group">
+        <label class="label">URL</label>
+        <div class="url-row">
+          <input type="url" class="input" id="url-inp"
+                 placeholder="https://…"
+                 onpaste="schedFetch(50)"
+                 oninput="schedFetch(900)">
+          <button class="fetch-btn" id="fetch-btn" onclick="doFetch()">
+            <span id="fetch-label">Fetch</span>
+          </button>
+        </div>
+        <div class="form-hint">Paste a URL — metadata loads automatically</div>
+      </div>
+
+      <!-- Preview -->
+      <div id="preview">
+        <div id="preview-thumb-wrap"></div>
+        <div class="preview-meta">
+          <span class="type-badge" id="preview-badge"></span>
+        </div>
+      </div>
+
+      <!-- Title -->
+      <div class="form-group">
+        <label class="label">Title</label>
+        <input type="text" class="input" id="title-inp" placeholder="Title of this reference…">
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label class="label">Description <span class="label-opt">(optional)</span></label>
+        <textarea class="input" id="desc-inp" placeholder="Brief notes or summary…" rows="3"></textarea>
+      </div>
+
+      <!-- Collection + Type -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="label">Collection</label>
+          <select class="input" id="col-sel">
+            <option value="">— None —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="label">Type</label>
+          <select class="input" id="type-sel">
+            <option value="article">Article</option>
+            <option value="youtube">YouTube</option>
+            <option value="website">Website</option>
+            <option value="twitter">Twitter / X</option>
+            <option value="instagram">Instagram</option>
+            <option value="github">GitHub</option>
+            <option value="reddit">Reddit</option>
+            <option value="image">Image</option>
+            <option value="pdf">PDF</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tags -->
+      <div class="form-group">
+        <label class="label">Tags <span class="label-opt">(optional — press Enter or comma)</span></label>
+        <div class="tags-wrap" id="tags-wrap" onclick="focusTagInput()">
+          <input type="text" class="tag-real-input" id="tag-inp"
+                 placeholder="design, react, tutorial…"
+                 onkeydown="onTagKey(event)">
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeModal('m-add')">Cancel</button>
+        <button class="btn btn-primary" id="save-btn" onclick="saveRef()">Save Reference</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     MODAL: SETTINGS (GitHub)
+================================================================ -->
+<div class="overlay" id="m-settings">
+  <div class="modal sm">
+    <div class="modal-head">
+      <div class="modal-title">GitHub Settings</div>
+      <button class="close-btn" onclick="closeModal('m-settings')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:16px;">
+        Refbase stores all your data in a <code style="color:var(--accent);font-size:11px;">data.json</code>
+        file in your GitHub repo. Your personal access token is kept only in this browser's
+        <code style="color:var(--accent);font-size:11px;">localStorage</code>.
+      </p>
+
+      <div class="form-group">
+        <label class="label">GitHub Username</label>
+        <input type="text" class="input" id="gh-user" placeholder="your-username" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="label">Repository Name</label>
+        <input type="text" class="input" id="gh-repo" placeholder="my-references" autocomplete="off">
+        <div class="form-hint">The repo this app is deployed from</div>
+      </div>
+      <div class="form-group">
+        <label class="label">Personal Access Token</label>
+        <input type="password" class="input" id="gh-token" placeholder="ghp_…" autocomplete="off">
+        <div class="form-hint">Needs <strong>Contents: Read &amp; Write</strong> permission</div>
+      </div>
+      <div class="form-group">
+        <label class="label">File Path</label>
+        <input type="text" class="input" id="gh-path" placeholder="data.json">
+        <div class="form-hint">Path to data file in repo (default: data.json)</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeModal('m-settings')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSettings()">Save &amp; Connect</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     MODAL: NEW COLLECTION
+================================================================ -->
+<div class="overlay" id="m-col">
+  <div class="modal sm">
+    <div class="modal-head">
+      <div class="modal-title">New Collection</div>
+      <button class="close-btn" onclick="closeModal('m-col')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="label">Name</label>
+        <input type="text" class="input" id="col-name-inp"
+               placeholder="e.g. Design Inspiration"
+               onkeydown="if(event.key==='Enter') saveCol()">
+      </div>
+      <div class="form-group">
+        <label class="label">Color</label>
+        <div class="swatches" id="col-swatches"><!-- dynamic --></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeModal('m-col')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveCol()">Create</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     MODAL: CONFIRM
+================================================================ -->
+<div class="overlay" id="m-confirm">
+  <div class="modal xs">
+    <div class="modal-head">
+      <div class="modal-title" id="confirm-title">Confirm</div>
+      <button class="close-btn" onclick="closeModal('m-confirm')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="confirm-msg" id="confirm-msg"></div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeModal('m-confirm')">Cancel</button>
+        <button class="btn btn-danger" id="confirm-ok">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     MODAL: MOVE TO COLLECTION
+================================================================ -->
+<div class="overlay" id="m-move">
+  <div class="modal xs">
+    <div class="modal-head">
+      <div class="modal-title">Move to Collection</div>
+      <button class="close-btn" onclick="closeModal('m-move')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="label">Collection</label>
+        <select class="input" id="move-sel">
+          <option value="">— None —</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeModal('m-move')">Cancel</button>
+        <button class="btn btn-primary" onclick="doMove()">Move</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toasts"></div>
+
+<!-- ================================================================
+     JAVASCRIPT
+================================================================ -->
+<script>
+/* ================================================================
+   CONSTANTS
+================================================================ */
+
+/** Palette for collection colors */
+const PALETTE = [
+  '#6366f1','#8b5cf6','#a855f7','#ec4899',
+  '#ef4444','#f97316','#f59e0b','#eab308',
+  '#22c55e','#14b8a6','#3b82f6','#06b6d4',
+];
+
+/** Type metadata: label, background color, icon emoji */
+const TYPES = {
+  youtube:   { label:'YouTube',    color:'#ef4444', icon:'▶' },
+  twitter:   { label:'Twitter/X',  color:'#1d9bf0', icon:'𝕏' },
+  instagram: { label:'Instagram',  color:'#e1306c', icon:'📷' },
+  github:    { label:'GitHub',     color:'#7c3aed', icon:'⌥' },
+  reddit:    { label:'Reddit',     color:'#ff4500', icon:'●' },
+  image:     { label:'Image',      color:'#059669', icon:'🖼' },
+  pdf:       { label:'PDF',        color:'#d97706', icon:'📄' },
+  article:   { label:'Article',    color:'#2563eb', icon:'📰' },
+  website:   { label:'Website',    color:'#475569', icon:'🌐' },
+  other:     { label:'Other',      color:'#64748b', icon:'🔗' },
+};
+
+/** Type-to-collection autosuggest map */
+const TYPE_COL_HINT = {
+  youtube:   'Videos',
+  image:     'Design Inspiration',
+  github:    'Dev Resources',
+  twitter:   'Social',
+  instagram: 'Social',
+  reddit:    'Community',
+};
+
+const MICROLINK = 'https://api.microlink.io?url=';
+const LS_KEY    = 'refbase_gh';
+
+/* ================================================================
+   STATE
+================================================================ */
+const S = {
+  refs:        [],       // All reference objects
+  cols:        [],       // All collection objects
+  view:        'grid',   // 'grid' | 'list'
+  filter:      { type: 'collection', val: 'all' },
+  search:      '',
+  activeTags:  [],
+  gh:          null,     // { user, repo, token, path }
+  sha:         null,     // GitHub file SHA (needed for updates)
+  editingId:   null,     // Ref being edited
+  movingId:    null,     // Ref being moved
+  pendingTags: [],       // Tags in the add/edit form
+  pickedColor: PALETTE[0],
+};
+
+/* ================================================================
+   INIT
+================================================================ */
+async function init() {
+  // Restore GitHub config from localStorage
+  const saved = localStorage.getItem(LS_KEY);
+  if (saved) {
+    try { S.gh = JSON.parse(saved); } catch {}
+  }
+
+  renderSwatches();
+
+  if (S.gh) {
+    await loadGH();
+  } else {
+    setStatus('Connect GitHub to sync data', 'warn');
+    openSettings();
+    renderAll();
+  }
+}
+
+/* ================================================================
+   GITHUB API
+================================================================ */
+
+/** Load data.json from the configured GitHub repo */
+async function loadGH() {
+  if (!S.gh) return;
+  const { user, repo, token, path = 'data.json' } = S.gh;
+  setStatus('Loading…', 'syncing');
+
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${user}/${repo}/contents/${encodeURIComponent(path)}`,
+      { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json' } }
+    );
+
+    if (res.status === 404) {
+      // File doesn't exist yet — start fresh, will create on first save
+      setStatus('data.json not found — will create on first save', 'warn');
+      S.refs = []; S.cols = []; S.sha = null;
+      renderAll(); return;
+    }
+
+    if (!res.ok) {
+      const e = await res.json();
+      throw new Error(e.message || `HTTP ${res.status}`);
+    }
+
+    const file = await res.json();
+    S.sha = file.sha;
+
+    // GitHub returns content as base64 with newlines — decode carefully
+    const raw = atob(file.content.replace(/\n/g, ''));
+    const data = JSON.parse(raw);
+
+    S.refs = Array.isArray(data.references)  ? data.references  : [];
+    S.cols = Array.isArray(data.collections) ? data.collections : [];
+
+    setStatus(`${S.refs.length} reference${S.refs.length !== 1 ? 's' : ''} loaded`, 'ok');
+    renderAll();
+
+  } catch (err) {
+    console.error('[GH load]', err);
+    setStatus(`Load failed: ${err.message}`, 'error');
+    toast(`Could not load from GitHub: ${err.message}`, 'error');
+    renderAll();
+  }
+}
+
+/** Write the current state back to GitHub */
+async function saveGH() {
+  if (!S.gh) {
+    toast('No GitHub config — open Settings', 'error'); return false;
+  }
+
+  const { user, repo, token, path = 'data.json' } = S.gh;
+  setStatus('Saving…', 'syncing');
+
+  const payload = {
+    references:  S.refs,
+    collections: S.cols,
+    lastUpdated: new Date().toISOString(),
+  };
+
+  // Encode to base64 (handle unicode safely)
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
+
+  const body = {
+    message: `refbase: update — ${new Date().toLocaleString()}`,
+    content,
+    ...(S.sha && { sha: S.sha }),
+  };
+
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${user}/${repo}/contents/${encodeURIComponent(path)}`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (!res.ok) {
+      const e = await res.json();
+      throw new Error(e.message || `HTTP ${res.status}`);
+    }
+
+    const result = await res.json();
+    S.sha = result.content.sha;
+    setStatus(`Saved · ${fmtDate(new Date())}`, 'ok');
+    return true;
+
+  } catch (err) {
+    console.error('[GH save]', err);
+    setStatus(`Save failed: ${err.message}`, 'error');
+    toast(`Save failed: ${err.message}`, 'error');
+    return false;
+  }
+}
+
+/* ================================================================
+   SETTINGS
+================================================================ */
+
+function openSettings() {
+  if (S.gh) {
+    $('gh-user').value  = S.gh.user  || '';
+    $('gh-repo').value  = S.gh.repo  || '';
+    $('gh-token').value = S.gh.token || '';
+    $('gh-path').value  = S.gh.path  || 'data.json';
+  } else {
+    $('gh-path').value = 'data.json';
+  }
+  openModal('m-settings');
+}
+
+async function saveSettings() {
+  const user  = $('gh-user').value.trim();
+  const repo  = $('gh-repo').value.trim();
+  const token = $('gh-token').value.trim();
+  const path  = $('gh-path').value.trim() || 'data.json';
+
+  if (!user || !repo || !token) {
+    toast('Please fill in all three GitHub fields', 'error'); return;
+  }
+
+  S.gh  = { user, repo, token, path };
+  S.sha = null;
+  localStorage.setItem(LS_KEY, JSON.stringify(S.gh));
+  closeModal('m-settings');
+  toast('Connected — loading data…', 'success');
+  await loadGH();
+}
+
+/* ================================================================
+   URL DETECTION & MICROLINK FETCH
+================================================================ */
+
+/** Detect reference type from URL */
+function detectType(url) {
+  try {
+    const h = new URL(url).hostname.replace(/^www\./, '');
+    if (/youtube\.com|youtu\.be/.test(h))  return 'youtube';
+    if (/twitter\.com|x\.com/.test(h))     return 'twitter';
+    if (/instagram\.com/.test(h))          return 'instagram';
+    if (/github\.com/.test(h))             return 'github';
+    if (/reddit\.com/.test(h))             return 'reddit';
+    const p = new URL(url).pathname.toLowerCase();
+    if (/\.(jpe?g|png|gif|webp|avif|svg)(\?|$)/.test(p)) return 'image';
+    if (/\.pdf(\?|$)/.test(p))             return 'pdf';
+    return 'article';
+  } catch {
+    return 'website';
+  }
+}
+
+let _fetchTimer = null;
+
+/** Schedule a metadata fetch (debounced) */
+function schedFetch(delay) {
+  clearTimeout(_fetchTimer);
+  _fetchTimer = setTimeout(() => {
+    const url = $('url-inp').value.trim();
+    if (url.startsWith('http')) doFetch();
+  }, delay);
+}
+
+/** Fetch metadata from Microlink and populate the form */
+async function doFetch() {
+  clearTimeout(_fetchTimer);
+  const url = $('url-inp').value.trim();
+  if (!url.startsWith('http')) { toast('Enter a valid URL (https://…)', 'error'); return; }
+
+  const btn   = $('fetch-btn');
+  const label = $('fetch-label');
+  btn.disabled = true;
+  label.innerHTML = '<div class="spin"></div>';
+
+  try {
+    const res  = await fetch(`${MICROLINK}${encodeURIComponent(url)}`);
+    const data = await res.json();
+
+    const type = detectType(url);
+    $('type-sel').value = type;
+
+    if (data.status === 'success') {
+      const { title, description, image } = data.data;
+      if (!$('title-inp').value) $('title-inp').value = title || '';
+      if (!$('desc-inp').value)  $('desc-inp').value  = description || '';
+      showPreview({ type, thumb: image?.url || null });
+      toast('Metadata fetched ✓', 'success');
+    } else {
+      showPreview({ type, thumb: null });
+      toast('Could not fetch metadata — fill in manually', 'warn');
+    }
+
+    // Auto-select a matching collection if one exists
+    const hint = TYPE_COL_HINT[type];
+    if (hint) {
+      const match = S.cols.find(c => c.name.toLowerCase() === hint.toLowerCase());
+      if (match) $('col-sel').value = match.id;
+    }
+
+  } catch (err) {
+    const type = detectType(url);
+    $('type-sel').value = type;
+    showPreview({ type, thumb: null });
+    toast('Network error fetching metadata', 'error');
+  } finally {
+    btn.disabled = false;
+    label.textContent = 'Fetch';
+  }
+}
+
+/** Render the preview card in the add modal */
+function showPreview({ type, thumb }) {
+  const tc = TYPES[type] || TYPES.other;
+  const badge = $('preview-badge');
+  badge.textContent = tc.label;
+  badge.style.background = tc.color;
+
+  const wrap = $('preview-thumb-wrap');
+  if (thumb) {
+    wrap.innerHTML = `<img id="preview-img" src="${esc(thumb)}"
+      onerror="this.parentNode.innerHTML='<div class=preview-placeholder>${tc.icon}</div>'" alt="">`;
+  } else {
+    wrap.innerHTML = `<div class="preview-placeholder">${tc.icon}</div>`;
+  }
+
+  $('preview').classList.add('show');
+}
+
+/* ================================================================
+   TAGS INPUT
+================================================================ */
+
+function focusTagInput() { $('tag-inp').focus(); }
+
+function onTagKey(e) {
+  const inp = e.target;
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    addTag(inp.value);
+    inp.value = '';
+  } else if (e.key === 'Backspace' && !inp.value && S.pendingTags.length) {
+    S.pendingTags.pop();
+    renderTagTokens();
+  }
+}
+
+function addTag(raw) {
+  const tag = raw.trim().toLowerCase().replace(/[,\s]+/g, '-').replace(/[^a-z0-9_-]/g, '');
+  if (tag && !S.pendingTags.includes(tag)) {
+    S.pendingTags.push(tag);
+    renderTagTokens();
+  }
+}
+
+function removeTag(tag) {
+  S.pendingTags = S.pendingTags.filter(t => t !== tag);
+  renderTagTokens();
+}
+
+function renderTagTokens() {
+  const wrap = $('tags-wrap');
+  const inp  = $('tag-inp');
+  wrap.querySelectorAll('.tag-token').forEach(el => el.remove());
+  S.pendingTags.forEach(tag => {
+    const el = document.createElement('span');
+    el.className = 'tag-token';
+    el.innerHTML = `${esc(tag)}<span class="tag-token-x" onclick="removeTag('${esc(tag)}')">×</span>`;
+    wrap.insertBefore(el, inp);
+  });
+}
+
+/* ================================================================
+   REFERENCE CRUD
+================================================================ */
+
+function openAddModal() {
+  S.editingId   = null;
+  S.pendingTags = [];
+
+  $('m-add-title').textContent   = 'Add Reference';
+  $('save-btn').textContent      = 'Save Reference';
+  $('url-group').style.display   = '';
+  $('url-inp').value             = '';
+  $('title-inp').value           = '';
+  $('desc-inp').value            = '';
+  $('type-sel').value            = 'article';
+  $('preview').classList.remove('show');
+
+  fillColSelect('col-sel');
+  renderTagTokens();
+  openModal('m-add');
+  setTimeout(() => $('url-inp').focus(), 210);
+}
+
+function openEditModal(id) {
+  const ref = S.refs.find(r => r.id === id);
+  if (!ref) return;
+
+  S.editingId   = id;
+  S.pendingTags = [...(ref.tags || [])];
+
+  $('m-add-title').textContent  = 'Edit Reference';
+  $('save-btn').textContent     = 'Save Changes';
+  $('url-group').style.display  = 'none';
+  $('title-inp').value          = ref.title || '';
+  $('desc-inp').value           = ref.description || '';
+  $('type-sel').value           = ref.type || 'article';
+
+  if (ref.thumbnail) showPreview({ type: ref.type, thumb: ref.thumbnail });
+  else $('preview').classList.remove('show');
+
+  fillColSelect('col-sel', ref.collectionId);
+  renderTagTokens();
+  openModal('m-add');
+  setTimeout(() => $('title-inp').focus(), 210);
+}
+
+async function saveRef() {
+  const title = $('title-inp').value.trim();
+  if (!title) { toast('Title is required', 'error'); $('title-inp').focus(); return; }
+
+  const btn = $('save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  if (S.editingId) {
+    // ── Update existing ──────────────────────────────────────
+    const i = S.refs.findIndex(r => r.id === S.editingId);
+    if (i !== -1) {
+      S.refs[i] = {
+        ...S.refs[i],
+        title,
+        description:  $('desc-inp').value.trim(),
+        type:         $('type-sel').value,
+        collectionId: $('col-sel').value || null,
+        tags:         [...S.pendingTags],
+        updatedAt:    now(),
+      };
+    }
+  } else {
+    // ── Create new ───────────────────────────────────────────
+    const url = $('url-inp').value.trim();
+    if (!url) { toast('URL is required', 'error'); btn.disabled=false; btn.textContent='Save Reference'; return; }
+
+    // Grab thumbnail from preview if available
+    const previewImg = document.getElementById('preview-img');
+    const thumb = (previewImg && previewImg.src && !previewImg.src.startsWith('data:'))
+      ? previewImg.src : null;
+
+    S.refs.unshift({
+      id:           uid(),
+      url,
+      title,
+      description:  $('desc-inp').value.trim(),
+      thumbnail:    thumb,
+      type:         $('type-sel').value,
+      collectionId: $('col-sel').value || null,
+      tags:         [...S.pendingTags],
+      savedAt:      now(),
+      updatedAt:    now(),
+    });
+  }
+
+  closeModal('m-add');
+  renderAll();
+
+  const ok = await saveGH();
+  if (ok) toast(S.editingId ? 'Reference updated' : 'Reference saved', 'success');
+
+  btn.disabled = false;
+  btn.textContent = S.editingId ? 'Save Changes' : 'Save Reference';
+  S.editingId = null;
+}
+
+function askDelete(id) {
+  const ref = S.refs.find(r => r.id === id);
+  if (!ref) return;
+
+  $('confirm-title').textContent = 'Delete Reference';
+  $('confirm-msg').textContent   = `Delete "${ref.title}"? This cannot be undone.`;
+
+  $('confirm-ok').onclick = async () => {
+    S.refs = S.refs.filter(r => r.id !== id);
+    closeModal('m-confirm');
+    renderAll();
+    const ok = await saveGH();
+    if (ok) toast('Reference deleted', 'success');
+  };
+
+  openModal('m-confirm');
+}
+
+function openMoveModal(id) {
+  S.movingId = id;
+  const ref  = S.refs.find(r => r.id === id);
+  fillColSelect('move-sel', ref?.collectionId);
+  openModal('m-move');
+}
+
+async function doMove() {
+  const newColId = $('move-sel').value || null;
+  const i = S.refs.findIndex(r => r.id === S.movingId);
+  if (i !== -1) { S.refs[i].collectionId = newColId; S.refs[i].updatedAt = now(); }
+  closeModal('m-move');
+  renderAll();
+  const ok = await saveGH();
+  if (ok) toast('Moved to collection', 'success');
+}
+
+/* ================================================================
+   COLLECTION CRUD
+================================================================ */
+
+function openNewColModal() {
+  $('col-name-inp').value = '';
+  S.pickedColor = PALETTE[0];
+  renderSwatches();
+  openModal('m-col');
+  setTimeout(() => $('col-name-inp').focus(), 210);
+}
+
+async function saveCol() {
+  const name = $('col-name-inp').value.trim();
+  if (!name) { toast('Enter a collection name', 'error'); return; }
+
+  S.cols.push({ id: uid(), name, color: S.pickedColor, createdAt: now() });
+  closeModal('m-col');
+  renderAll();
+  const ok = await saveGH();
+  if (ok) toast(`Collection "${name}" created`, 'success');
+}
+
+function renderSwatches() {
+  const el = document.getElementById('col-swatches');
+  if (!el) return;
+  el.innerHTML = PALETTE.map(c => `
+    <div class="swatch ${c === S.pickedColor ? 'sel' : ''}"
+         style="background:${c}"
+         onclick="pickColor('${c}')"
+         title="${c}"></div>
+  `).join('');
+}
+
+function pickColor(c) { S.pickedColor = c; renderSwatches(); }
+
+/* ================================================================
+   RENDER
+================================================================ */
+
+function renderAll() {
+  renderSidebar();
+  renderRefs();
+}
+
+function renderSidebar() {
+  // All count
+  $('all-count').textContent = S.refs.length;
+
+  // Collections list
+  $('col-list').innerHTML = S.cols.map(col => {
+    const cnt     = S.refs.filter(r => r.collectionId === col.id).length;
+    const isActive = S.filter.type === 'collection' && S.filter.val === col.id;
+    return `
+      <div class="nav-item ${isActive ? 'active' : ''}"
+           data-ftype="collection" data-fval="${col.id}"
+           onclick="applyFilter('collection','${col.id}',this)">
+        <div class="nav-item-left">
+          <div class="col-dot" style="background:${col.color}"></div>
+          <span class="nav-item-label">${esc(col.name)}</span>
+        </div>
+        <span class="nav-count">${cnt}</span>
+      </div>`;
+  }).join('');
+
+  // Type filters — only show types present in refs
+  const counts = {};
+  S.refs.forEach(r => { counts[r.type] = (counts[r.type] || 0) + 1; });
+
+  $('type-filter-list').innerHTML = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([type, cnt]) => {
+      const tc      = TYPES[type] || TYPES.other;
+      const isActive = S.filter.type === 'type' && S.filter.val === type;
+      return `
+        <div class="nav-item ${isActive ? 'active' : ''}"
+             onclick="applyFilter('type','${type}',this)">
+          <div class="nav-item-left">
+            <div class="type-dot" style="background:${tc.color}"></div>
+            <span class="nav-item-label">${tc.label}</span>
+          </div>
+          <span class="nav-count">${cnt}</span>
+        </div>`;
+    }).join('');
+
+  // Keep "All References" active state in sync
+  const allEl = document.querySelector('[data-ftype="collection"][data-fval="all"]');
+  if (allEl) allEl.classList.toggle('active', S.filter.type === 'collection' && S.filter.val === 'all');
+}
+
+function renderRefs() {
+  let refs = [...S.refs];
+
+  // Collection / type filter
+  if (S.filter.type === 'collection' && S.filter.val !== 'all') {
+    refs = refs.filter(r => r.collectionId === S.filter.val);
+  } else if (S.filter.type === 'type') {
+    refs = refs.filter(r => r.type === S.filter.val);
+  }
+
+  // Tag filters
+  if (S.activeTags.length) {
+    refs = refs.filter(r => S.activeTags.every(t => (r.tags || []).includes(t)));
+  }
+
+  // Search
+  if (S.search) {
+    const q = S.search.toLowerCase();
+    refs = refs.filter(r =>
+      (r.title || '').toLowerCase().includes(q) ||
+      (r.description || '').toLowerCase().includes(q) ||
+      (r.url || '').toLowerCase().includes(q) ||
+      (r.tags || []).some(t => t.includes(q))
+    );
+  }
+
+  const grid  = $('grid');
+  const empty = $('empty-state');
+
+  if (refs.length === 0) {
+    grid.innerHTML = '';
+    empty.classList.add('show');
+  } else {
+    empty.classList.remove('show');
+    grid.innerHTML = refs.map(renderCard).join('');
+  }
+
+  renderTagBar();
+}
+
+function renderCard(ref) {
+  const tc  = TYPES[ref.type] || TYPES.other;
+  const col = ref.collectionId ? S.cols.find(c => c.id === ref.collectionId) : null;
+
+  // Thumbnail or placeholder
+  const thumbHtml = ref.thumbnail
+    ? `<img class="card-thumb" src="${esc(ref.thumbnail)}" loading="lazy" alt=""
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+       <div class="card-thumb-placeholder" style="display:none">${tc.icon}</div>`
+    : `<div class="card-thumb-placeholder">${tc.icon}</div>`;
+
+  // Tags row
+  const tagsHtml = (ref.tags || []).length
+    ? `<div class="card-tags">${ref.tags.map(t =>
+        `<span class="tag-pill" onclick="event.stopPropagation();toggleTag('${esc(t)}')">#${esc(t)}</span>`
+      ).join('')}</div>`
+    : '';
+
+  // Collection chip
+  const colHtml = col
+    ? `<span class="col-pill" style="background:${col.color}" title="${esc(col.name)}">${esc(col.name)}</span>`
+    : '';
+
+  return `
+    <div class="ref-card" onclick="openRef('${ref.id}')">
+      ${thumbHtml}
+      <div class="card-top-badges">
+        <span class="type-badge" style="background:${tc.color};backdrop-filter:blur(6px)">${tc.label}</span>
+        <div class="card-actions" onclick="event.stopPropagation()">
+          <button class="qbtn" title="Edit"      onclick="openEditModal('${ref.id}')">✎</button>
+          <button class="qbtn" title="Move"      onclick="openMoveModal('${ref.id}')">⇄</button>
+          <button class="qbtn del" title="Delete" onclick="askDelete('${ref.id}')">🗑</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">${esc(ref.title || 'Untitled')}</div>
+        ${ref.description ? `<div class="card-desc">${esc(ref.description)}</div>` : ''}
+        ${tagsHtml}
+        <div class="card-footer">
+          ${colHtml}
+          <span class="card-date">${fmtDate(ref.savedAt)}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderTagBar() {
+  const bar = $('tag-bar');
+  bar.innerHTML = S.activeTags.map(t => `
+    <div class="tag-filter-pill" onclick="toggleTag('${esc(t)}')">
+      #${esc(t)} <span>×</span>
+    </div>`).join('');
+}
+
+/* ================================================================
+   FILTERING & SEARCH
+================================================================ */
+
+function applyFilter(type, val, el) {
+  S.filter     = { type, val };
+  S.activeTags = [];
+
+  // Update sidebar active states
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+
+  // Topbar title
+  let title = 'All References';
+  if (type === 'collection' && val !== 'all') {
+    title = S.cols.find(c => c.id === val)?.name || 'Collection';
+  } else if (type === 'type') {
+    title = (TYPES[val] || TYPES.other).label;
+  }
+  $('topbar-title').textContent = title;
+
+  renderRefs();
+  closeMobileSidebar();
+}
+
+let _searchTimer = null;
+function onSearch(v) {
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(() => { S.search = v.trim(); renderRefs(); }, 180);
+}
+
+function toggleTag(tag) {
+  S.activeTags = S.activeTags.includes(tag)
+    ? S.activeTags.filter(t => t !== tag)
+    : [...S.activeTags, tag];
+  renderRefs();
+}
+
+/* ================================================================
+   VIEW TOGGLE
+================================================================ */
+
+function setView(v) {
+  S.view = v;
+  $('grid').classList.toggle('list', v === 'list');
+  $('btn-grid').classList.toggle('active', v === 'grid');
+  $('btn-list').classList.toggle('active', v === 'list');
+}
+
+/* ================================================================
+   NAVIGATION
+================================================================ */
+
+function openRef(id) {
+  const ref = S.refs.find(r => r.id === id);
+  if (ref) window.open(ref.url, '_blank', 'noopener,noreferrer');
+}
+
+/* ================================================================
+   EXPORT / IMPORT
+================================================================ */
+
+function exportAll() {
+  const data = { references: S.refs, collections: S.cols, exportedAt: now() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `refbase-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Backup downloaded', 'success');
+}
+
+function importAll(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data.references)) { toast('Invalid backup format', 'error'); return; }
+
+      const existIds    = new Set(S.refs.map(r => r.id));
+      const existColIds = new Set(S.cols.map(c => c.id));
+      const newRefs     = data.references.filter(r => !existIds.has(r.id));
+      const newCols     = (data.collections || []).filter(c => !existColIds.has(c.id));
+
+      S.refs = [...newRefs, ...S.refs];
+      S.cols = [...S.cols, ...newCols];
+
+      renderAll();
+      const ok = await saveGH();
+      if (ok) toast(`Imported ${newRefs.length} refs, ${newCols.length} collections`, 'success');
+    } catch {
+      toast('Failed to parse JSON backup', 'error');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+/* ================================================================
+   MODAL HELPERS
+================================================================ */
+
+function openModal(id)  { $(id).classList.add('open'); }
+function closeModal(id) { $(id).classList.remove('open'); }
+
+// Close on overlay click
+document.querySelectorAll('.overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+});
+
+// Close on Escape key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.overlay.open').forEach(ov => ov.classList.remove('open'));
+  }
+  // Cmd/Ctrl+K — quick add
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    openAddModal();
+  }
+});
+
+/** Populate a <select> with all collections */
+function fillColSelect(selId, selectedId = '') {
+  const el = $(selId);
+  el.innerHTML = `<option value="">— No Collection —</option>` +
+    S.cols.map(c => `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+}
+
+/* ================================================================
+   MOBILE SIDEBAR
+================================================================ */
+
+function toggleMobileSidebar() {
+  $('sidebar').classList.toggle('open');
+  $('sidebar-veil').classList.toggle('show');
+}
+function closeMobileSidebar() {
+  $('sidebar').classList.remove('open');
+  $('sidebar-veil').classList.remove('show');
+}
+
+/* ================================================================
+   STATUS BAR
+================================================================ */
+
+function setStatus(text, state = 'ok') {
+  $('s-text').textContent = text;
+  const dot = $('s-dot');
+  dot.className = 's-dot';
+  if (state !== 'ok') dot.classList.add(state);
+}
+
+/* ================================================================
+   TOAST NOTIFICATIONS
+================================================================ */
+
+function toast(msg, type = 'info') {
+  const icons = { success:'✓', error:'✕', warn:'⚠', info:'ℹ' };
+  const el    = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="toast-icon">${icons[type]||'ℹ'}</span>${esc(msg)}`;
+  $('toasts').appendChild(el);
+  setTimeout(() => {
+    el.style.cssText = 'opacity:0;transform:translateX(14px);transition:opacity 0.3s,transform 0.3s';
+    setTimeout(() => el.remove(), 320);
+  }, 3200);
+}
+
+/* ================================================================
+   UTILITIES
+================================================================ */
+
+/** Short unique ID */
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+/** ISO timestamp */
+function now() { return new Date().toISOString(); }
+
+/** HTML escape */
+function esc(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+}
+
+/** Human-readable relative date */
+function fmtDate(str) {
+  if (!str) return '';
+  const d    = new Date(str);
+  const diff = Date.now() - d;
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 7)  return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days/7)}w ago`;
+  if (days < 365) return d.toLocaleDateString('en', { month:'short', day:'numeric' });
+  return d.toLocaleDateString('en', { year:'numeric', month:'short', day:'numeric' });
+}
+
+/** getElementById shorthand */
+function $(id) { return document.getElementById(id); }
+
+/* ================================================================
+   BOOTSTRAP
+================================================================ */
+init();
+</script>
+
+</body>
+</html>
