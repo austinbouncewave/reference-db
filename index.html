@@ -1577,7 +1577,56 @@ function schedFetch(delay) {
   }, delay);
 }
 
-/** Fetch metadata from Microlink and populate the form */
+/**
+ * Extract a YouTube video ID from any common URL format:
+ *   youtube.com/watch?v=ID
+ *   youtu.be/ID
+ *   youtube.com/shorts/ID
+ *   youtube.com/embed/ID
+ * Returns the ID string, or null if not a YouTube URL.
+ */
+function extractYouTubeId(url) {
+  try {
+    const u = new URL(url);
+    const h = u.hostname.replace(/^www\./, '');
+    if (h === 'youtu.be') {
+      // Short URL: youtu.be/VIDEO_ID
+      return u.pathname.slice(1).split('/')[0] || null;
+    }
+    if (/youtube\.com/.test(h)) {
+      // /watch?v=VIDEO_ID
+      if (u.searchParams.has('v')) return u.searchParams.get('v');
+      // /shorts/VIDEO_ID  or  /embed/VIDEO_ID  or  /v/VIDEO_ID
+      const m = u.pathname.match(/\/(shorts|embed|v)\/([^/?#]+)/);
+      if (m) return m[2];
+    }
+  } catch {}
+  return null;
+}
+
+/**
+ * Fetch YouTube metadata via the free oEmbed API (no API key required).
+ * Also builds a thumbnail URL directly from the video ID.
+ * Returns { title, thumbnail } or null on failure.
+ */
+async function fetchYouTubeMeta(url, videoId) {
+  // oEmbed gives us the title and a thumbnail (usually hqdefault)
+  const oEmbedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+  const res  = await fetch(oEmbedUrl);
+  if (!res.ok) return null;
+  const data = await res.json();
+
+  // Prefer maxresdefault; fall back to hqdefault which always exists
+  const thumb = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+
+  return {
+    title:     data.title       || '',
+    author:    data.author_name || '',
+    thumbnail: thumb,
+  };
+}
+
+/** Fetch metadata — uses YouTube oEmbed for YouTube URLs, Microlink for everything else */
 async function doFetch() {
   clearTimeout(_fetchTimer);
   const url = $('url-inp').value.trim();
@@ -1588,12 +1637,27 @@ async function doFetch() {
   btn.disabled = true;
   label.innerHTML = '<div class="spin"></div>';
 
+  const type = detectType(url);
+  $('type-sel').value = type;
+
   try {
+    // ── YouTube: use oEmbed + direct thumbnail URL ─────────────────
+    const ytId = extractYouTubeId(url);
+    if (ytId) {
+      const meta = await fetchYouTubeMeta(url, ytId);
+      if (meta) {
+        if (!$('title-inp').value) $('title-inp').value = meta.title;
+        showPreview({ type: 'youtube', thumb: meta.thumbnail });
+        autoSelectCollection(type);
+        toast('YouTube metadata fetched ✓', 'success');
+        return;
+      }
+      // oEmbed failed — fall through to Microlink
+    }
+
+    // ── Everything else (or YouTube oEmbed fallback): Microlink ────
     const res  = await fetch(`${MICROLINK}${encodeURIComponent(url)}`);
     const data = await res.json();
-
-    const type = detectType(url);
-    $('type-sel').value = type;
 
     if (data.status === 'success') {
       const { title, description, image } = data.data;
@@ -1606,21 +1670,23 @@ async function doFetch() {
       toast('Could not fetch metadata — fill in manually', 'warn');
     }
 
-    // Auto-select a matching collection if one exists
-    const hint = TYPE_COL_HINT[type];
-    if (hint) {
-      const match = S.cols.find(c => c.name.toLowerCase() === hint.toLowerCase());
-      if (match) $('col-sel').value = match.id;
-    }
+    autoSelectCollection(type);
 
   } catch (err) {
-    const type = detectType(url);
-    $('type-sel').value = type;
     showPreview({ type, thumb: null });
     toast('Network error fetching metadata', 'error');
   } finally {
     btn.disabled = false;
     label.textContent = 'Fetch';
+  }
+}
+
+/** Auto-select a collection in the dropdown if a matching name exists */
+function autoSelectCollection(type) {
+  const hint = TYPE_COL_HINT[type];
+  if (hint) {
+    const match = S.cols.find(c => c.name.toLowerCase() === hint.toLowerCase());
+    if (match) $('col-sel').value = match.id;
   }
 }
 
