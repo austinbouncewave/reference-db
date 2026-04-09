@@ -977,6 +977,148 @@
     .divider { height: 1px; background: var(--border-subtle); margin: 4px 0 8px; }
     .confirm-msg { font-size: 13px; color: var(--text-muted); line-height: 1.65; margin-bottom: 20px; }
 
+    /* ================================================================
+       FILE UPLOAD — MODAL TABS
+    ================================================================ */
+    .modal-tabs {
+      display: flex;
+      gap: 3px;
+      padding: 3px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      margin-bottom: 16px;
+    }
+    .modal-tab {
+      flex: 1;
+      padding: 7px 10px;
+      border: none;
+      border-radius: var(--radius-xs);
+      background: transparent;
+      color: var(--text-faint);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--t), color var(--t);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .modal-tab.active { background: var(--card); color: var(--text); }
+    .modal-tab:hover:not(.active) { color: var(--text-muted); }
+
+    /* ================================================================
+       FILE UPLOAD — DROP ZONE
+    ================================================================ */
+    .file-drop-zone {
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color var(--t), background var(--t);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .file-drop-zone:hover,
+    .file-drop-zone.drag-over { border-color: var(--accent); background: var(--accent-glow); }
+    .file-drop-icon { font-size: 30px; line-height: 1; }
+    .file-drop-text { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+    .file-drop-hint { font-size: 11px; color: var(--text-faint); }
+
+    /* ================================================================
+       FILE UPLOAD — SELECTED FILE PREVIEW (in modal)
+    ================================================================ */
+    .file-sel-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-top: 10px;
+    }
+    .file-icon-sm {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .file-sel-info { flex: 1; overflow: hidden; }
+    .file-sel-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .file-sel-meta { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+    .file-sel-meta.warn { color: var(--warn); font-weight: 600; }
+    .file-clr-btn {
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--text-faint);
+      cursor: pointer;
+      font-size: 14px;
+      transition: color var(--t), border-color var(--t);
+      flex-shrink: 0;
+    }
+    .file-clr-btn:hover { color: var(--danger); border-color: rgba(239,68,68,0.5); }
+
+    /* ================================================================
+       FILE CARD — GRID & LIST
+    ================================================================ */
+    .file-card-face {
+      width: 100%;
+      aspect-ratio: 16/9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .file-card-emoji { font-size: 40px; line-height: 1; }
+    .file-card-fname {
+      font-size: 10px;
+      color: rgba(255,255,255,0.5);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      max-width: 88%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .file-card-size {
+      font-size: 10px;
+      color: rgba(255,255,255,0.35);
+    }
+    /* In list view, make the face a square sidebar instead of 16:9 */
+    #grid.list .file-card-face {
+      width: 110px;
+      min-width: 110px;
+      aspect-ratio: unset;
+      min-height: 72px;
+      gap: 4px;
+    }
+    #grid.list .file-card-emoji { font-size: 28px; }
+    #grid.list .file-card-fname { display: none; }
+    #grid.list .file-card-size  { display: none; }
+
     /* Sidebar overlay (mobile) */
     #sidebar-veil {
       display: none;
@@ -1128,7 +1270,13 @@
     </div>
     <div class="modal-body">
 
-      <!-- URL row (hidden when editing) -->
+      <!-- Tab switcher (hidden when editing an existing ref) -->
+      <div class="modal-tabs" id="modal-tabs">
+        <button class="modal-tab active" id="tab-url"  onclick="switchTab('url')">🔗 Paste URL</button>
+        <button class="modal-tab"        id="tab-file" onclick="switchTab('file')">📁 Upload File</button>
+      </div>
+
+      <!-- URL row -->
       <div class="form-group" id="url-group">
         <label class="label">URL</label>
         <div class="url-row">
@@ -1143,7 +1291,26 @@
         <div class="form-hint">Paste a URL — metadata loads automatically</div>
       </div>
 
-      <!-- Preview -->
+      <!-- File upload zone -->
+      <div id="file-group" style="display:none">
+        <div class="file-drop-zone" id="file-drop-zone"
+             onclick="$('file-inp').click()"
+             ondragover="onDragOver(event)"
+             ondragleave="onDragLeave(event)"
+             ondrop="onFileDrop(event)">
+          <div class="file-drop-icon">📁</div>
+          <div class="file-drop-text">Click to select a file, or drag &amp; drop</div>
+          <div class="file-drop-hint">PDF · Word (.doc/.docx) · PowerPoint (.ppt/.pptx) · Excel (.xls/.xlsx)</div>
+        </div>
+        <!-- Hidden actual file input — accepts the right MIME types + extensions -->
+        <input type="file" id="file-inp" style="display:none"
+               accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+               onchange="onFileSelect(event)">
+        <!-- Selected file preview -->
+        <div id="file-sel-preview" style="display:none"></div>
+      </div>
+
+      <!-- URL metadata preview -->
       <div id="preview">
         <div id="preview-thumb-wrap"></div>
         <div class="preview-meta">
@@ -1171,7 +1338,7 @@
             <option value="">— None —</option>
           </select>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="type-group">
           <label class="label">Type</label>
           <select class="input" id="type-sel">
             <option value="article">Article</option>
@@ -1183,6 +1350,9 @@
             <option value="reddit">Reddit</option>
             <option value="image">Image</option>
             <option value="pdf">PDF</option>
+            <option value="word">Word Doc</option>
+            <option value="powerpoint">PowerPoint</option>
+            <option value="excel">Excel</option>
             <option value="other">Other</option>
           </select>
         </div>
@@ -1341,17 +1511,33 @@ const PALETTE = [
 
 /** Type metadata: label, background color, icon emoji */
 const TYPES = {
-  youtube:   { label:'YouTube',    color:'#ef4444', icon:'▶' },
-  twitter:   { label:'Twitter/X',  color:'#1d9bf0', icon:'𝕏' },
-  instagram: { label:'Instagram',  color:'#e1306c', icon:'📷' },
-  github:    { label:'GitHub',     color:'#7c3aed', icon:'⌥' },
-  reddit:    { label:'Reddit',     color:'#ff4500', icon:'●' },
-  image:     { label:'Image',      color:'#059669', icon:'🖼' },
-  pdf:       { label:'PDF',        color:'#d97706', icon:'📄' },
-  article:   { label:'Article',    color:'#2563eb', icon:'📰' },
-  website:   { label:'Website',    color:'#475569', icon:'🌐' },
-  other:     { label:'Other',      color:'#64748b', icon:'🔗' },
+  youtube:    { label:'YouTube',     color:'#ef4444', icon:'▶' },
+  twitter:    { label:'Twitter/X',   color:'#1d9bf0', icon:'𝕏' },
+  instagram:  { label:'Instagram',   color:'#e1306c', icon:'📷' },
+  github:     { label:'GitHub',      color:'#7c3aed', icon:'⌥' },
+  reddit:     { label:'Reddit',      color:'#ff4500', icon:'●' },
+  image:      { label:'Image',       color:'#059669', icon:'🖼' },
+  pdf:        { label:'PDF',         color:'#dc2626', icon:'📄' },
+  word:       { label:'Word',        color:'#2563eb', icon:'📝' },
+  powerpoint: { label:'PowerPoint',  color:'#ea580c', icon:'📊' },
+  excel:      { label:'Excel',       color:'#16a34a', icon:'📈' },
+  article:    { label:'Article',     color:'#4f46e5', icon:'📰' },
+  website:    { label:'Website',     color:'#475569', icon:'🌐' },
+  other:      { label:'Other',       color:'#64748b', icon:'🔗' },
 };
+
+/**
+ * File type config — maps file extensions to a type key in TYPES.
+ * Also carries the gradient used for the file card face.
+ */
+const FILE_TYPES = {
+  pdf:        { exts: ['pdf'],                  type: 'pdf',        grad: 'linear-gradient(135deg,#7f1d1d,#dc2626)' },
+  word:       { exts: ['doc','docx'],           type: 'word',       grad: 'linear-gradient(135deg,#1e3a8a,#2563eb)' },
+  powerpoint: { exts: ['ppt','pptx'],           type: 'powerpoint', grad: 'linear-gradient(135deg,#7c2d12,#ea580c)' },
+  excel:      { exts: ['xls','xlsx'],           type: 'excel',      grad: 'linear-gradient(135deg,#14532d,#16a34a)' },
+};
+
+const FILE_SIZE_WARN = 5 * 1024 * 1024; // 5 MB soft limit
 
 /** Type-to-collection autosuggest map */
 const TYPE_COL_HINT = {
@@ -1382,6 +1568,8 @@ const S = {
   movingId:    null,     // Ref being moved
   pendingTags: [],       // Tags in the add/edit form
   pickedColor: PALETTE[0],
+  addTab:      'url',    // 'url' | 'file'
+  pendingFile: null,     // { name, size, mime, ftKey, data } — set after file read
 };
 
 /* ================================================================
@@ -1758,15 +1946,18 @@ function renderTagTokens() {
 function openAddModal() {
   S.editingId   = null;
   S.pendingTags = [];
+  S.pendingFile = null;
 
-  $('m-add-title').textContent   = 'Add Reference';
-  $('save-btn').textContent      = 'Save Reference';
-  $('url-group').style.display   = '';
-  $('url-inp').value             = '';
-  $('title-inp').value           = '';
-  $('desc-inp').value            = '';
-  $('type-sel').value            = 'article';
+  $('m-add-title').textContent = 'Add Reference';
+  $('save-btn').textContent    = 'Save Reference';
+  $('title-inp').value         = '';
+  $('desc-inp').value          = '';
+  $('type-sel').value          = 'article';
   $('preview').classList.remove('show');
+
+  // Show tabs and default to URL mode
+  $('modal-tabs').style.display = '';
+  switchTab('url');
 
   fillColSelect('col-sel');
   renderTagTokens();
@@ -1780,16 +1971,25 @@ function openEditModal(id) {
 
   S.editingId   = id;
   S.pendingTags = [...(ref.tags || [])];
+  S.pendingFile = null;
 
-  $('m-add-title').textContent  = 'Edit Reference';
-  $('save-btn').textContent     = 'Save Changes';
-  $('url-group').style.display  = 'none';
-  $('title-inp').value          = ref.title || '';
-  $('desc-inp').value           = ref.description || '';
-  $('type-sel').value           = ref.type || 'article';
+  $('m-add-title').textContent    = 'Edit Reference';
+  $('save-btn').textContent       = 'Save Changes';
+  $('modal-tabs').style.display   = 'none';   // Hide tabs when editing
+  $('url-group').style.display    = 'none';
+  $('file-group').style.display   = 'none';
+  $('title-inp').value            = ref.title || '';
+  $('desc-inp').value             = ref.description || '';
+  $('type-sel').value             = ref.type || 'article';
 
-  if (ref.thumbnail) showPreview({ type: ref.type, thumb: ref.thumbnail });
-  else $('preview').classList.remove('show');
+  // Show thumbnail preview for URL refs; show file face for file refs
+  if (ref.isFile) {
+    $('preview').classList.remove('show');
+  } else if (ref.thumbnail) {
+    showPreview({ type: ref.type, thumb: ref.thumbnail });
+  } else {
+    $('preview').classList.remove('show');
+  }
 
   fillColSelect('col-sel', ref.collectionId);
   renderTagTokens();
@@ -1806,7 +2006,7 @@ async function saveRef() {
   btn.textContent = 'Saving…';
 
   if (S.editingId) {
-    // ── Update existing ──────────────────────────────────────
+    // ── Update existing (URL or file ref — only metadata changes) ──
     const i = S.refs.findIndex(r => r.id === S.editingId);
     if (i !== -1) {
       S.refs[i] = {
@@ -1819,8 +2019,31 @@ async function saveRef() {
         updatedAt:    now(),
       };
     }
+
+  } else if (S.addTab === 'file') {
+    // ── Create new FILE reference ─────────────────────────────
+    if (!S.pendingFile) {
+      toast('Select a file to upload', 'error');
+      btn.disabled = false; btn.textContent = 'Save Reference'; return;
+    }
+    S.refs.unshift({
+      id:           uid(),
+      isFile:       true,
+      fileName:     S.pendingFile.name,
+      fileSize:     S.pendingFile.size,
+      fileMime:     S.pendingFile.mime,
+      fileData:     S.pendingFile.data,   // base64 data URL
+      type:         $('type-sel').value,
+      title,
+      description:  $('desc-inp').value.trim(),
+      collectionId: $('col-sel').value || null,
+      tags:         [...S.pendingTags],
+      savedAt:      now(),
+      updatedAt:    now(),
+    });
+
   } else {
-    // ── Create new ───────────────────────────────────────────
+    // ── Create new URL reference ──────────────────────────────
     const url = $('url-inp').value.trim();
     if (!url) { toast('URL is required', 'error'); btn.disabled=false; btn.textContent='Save Reference'; return; }
 
@@ -1831,6 +2054,7 @@ async function saveRef() {
 
     S.refs.unshift({
       id:           uid(),
+      isFile:       false,
       url,
       title,
       description:  $('desc-inp').value.trim(),
@@ -1887,6 +2111,148 @@ async function doMove() {
   renderAll();
   const ok = await saveGH();
   if (ok) toast('Moved to collection', 'success');
+}
+
+/* ================================================================
+   FILE UPLOAD
+================================================================ */
+
+/** Switch the add modal between URL mode and File upload mode */
+function switchTab(tab) {
+  S.addTab = tab;
+
+  $('tab-url').classList.toggle('active',  tab === 'url');
+  $('tab-file').classList.toggle('active', tab === 'file');
+
+  $('url-group').style.display  = tab === 'url'  ? '' : 'none';
+  $('file-group').style.display = tab === 'file' ? '' : 'none';
+  $('preview').classList.remove('show');
+
+  if (tab === 'url') {
+    $('type-group').style.display = '';
+    setTimeout(() => $('url-inp').focus(), 100);
+  } else {
+    $('type-group').style.display = '';   // still visible — auto-set from file ext
+  }
+}
+
+/** Detect the Refbase type key from a File object's name/MIME */
+function fileTypeKey(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  for (const [key, cfg] of Object.entries(FILE_TYPES)) {
+    if (cfg.exts.includes(ext)) return key;
+  }
+  return 'other';
+}
+
+/** Read a File as a base64 data URL (returns a Promise) */
+function readAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload  = e => resolve(e.target.result);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+/** Called when the user selects a file via the file input or drag-drop */
+async function onFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  await processFile(file);
+  // Reset the input so the same file can be re-selected if cleared
+  event.target.value = '';
+}
+
+/** Core file processing: read to base64, validate, update UI */
+async function processFile(file) {
+  const ftKey = fileTypeKey(file);
+  const tc    = TYPES[ftKey] || TYPES.other;
+
+  // Show loading state in drop zone
+  const dz = $('file-drop-zone');
+  dz.style.opacity = '0.5';
+
+  try {
+    const data = await readAsDataURL(file);
+
+    S.pendingFile = {
+      name: file.name,
+      size: file.size,
+      mime: file.type,
+      ftKey,
+      data,
+    };
+
+    // Auto-set type selector
+    $('type-sel').value = ftKey !== 'other' ? ftKey : ($('type-sel').value);
+
+    // Auto-fill title with filename (strip extension) if empty
+    if (!$('title-inp').value) {
+      $('title-inp').value = file.name.replace(/\.[^.]+$/, '');
+    }
+
+    // Render the selected-file preview card
+    const isLarge = file.size > FILE_SIZE_WARN;
+    const ftEntry = FILE_TYPES[ftKey];
+    const grad    = ftEntry ? ftEntry.grad : 'linear-gradient(135deg,#1e293b,#334155)';
+
+    $('file-sel-preview').innerHTML = `
+      <div class="file-sel-card">
+        <div class="file-icon-sm" style="background:${grad}">${tc.icon}</div>
+        <div class="file-sel-info">
+          <div class="file-sel-name" title="${esc(file.name)}">${esc(file.name)}</div>
+          <div class="file-sel-meta ${isLarge ? 'warn' : ''}">
+            ${fmtFileSize(file.size)}${isLarge ? ' — over 5 MB, may be slow to sync' : ''}
+          </div>
+        </div>
+        <button class="file-clr-btn" onclick="clearFile()" title="Remove">✕</button>
+      </div>`;
+    $('file-sel-preview').style.display = '';
+    dz.style.display = 'none';   // hide drop zone once file is chosen
+
+  } catch (err) {
+    toast('Could not read file', 'error');
+  } finally {
+    dz.style.opacity = '';
+  }
+}
+
+/** Remove the selected file and reset the upload zone */
+function clearFile() {
+  S.pendingFile = null;
+  $('file-sel-preview').style.display = 'none';
+  $('file-sel-preview').innerHTML = '';
+  $('file-drop-zone').style.display = '';
+  $('title-inp').value = '';
+  $('type-sel').value  = 'article';
+}
+
+/** Drag-over: add visual feedback */
+function onDragOver(event) {
+  event.preventDefault();
+  $('file-drop-zone').classList.add('drag-over');
+}
+
+/** Drag-leave: remove visual feedback */
+function onDragLeave(event) {
+  $('file-drop-zone').classList.remove('drag-over');
+}
+
+/** Drop: extract file and process it */
+function onFileDrop(event) {
+  event.preventDefault();
+  $('file-drop-zone').classList.remove('drag-over');
+  const file = event.dataTransfer?.files[0];
+  if (!file) return;
+  // Basic extension check
+  const ext = file.name.split('.').pop().toLowerCase();
+  const allowed = Object.values(FILE_TYPES).flatMap(f => f.exts);
+  if (!allowed.includes(ext)) {
+    toast(`Unsupported file type (.${ext}) — use PDF, Word, PowerPoint, or Excel`, 'error');
+    return;
+  }
+  processFile(file);
 }
 
 /* ================================================================
@@ -2001,6 +2367,7 @@ function renderRefs() {
       (r.title || '').toLowerCase().includes(q) ||
       (r.description || '').toLowerCase().includes(q) ||
       (r.url || '').toLowerCase().includes(q) ||
+      (r.fileName || '').toLowerCase().includes(q) ||
       (r.tags || []).some(t => t.includes(q))
     );
   }
@@ -2023,43 +2390,63 @@ function renderCard(ref) {
   const tc  = TYPES[ref.type] || TYPES.other;
   const col = ref.collectionId ? S.cols.find(c => c.id === ref.collectionId) : null;
 
-  // Thumbnail or placeholder
-  const thumbHtml = ref.thumbnail
-    ? `<img class="card-thumb" src="${esc(ref.thumbnail)}" loading="lazy" alt=""
-            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-       <div class="card-thumb-placeholder" style="display:none">${tc.icon}</div>`
-    : `<div class="card-thumb-placeholder">${tc.icon}</div>`;
+  // ── Visual header: file face or URL thumbnail ──────────────────────
+  let headerHtml;
+  if (ref.isFile) {
+    // Colored gradient face with icon + filename
+    const ftEntry = Object.values(FILE_TYPES).find(f => f.type === ref.type);
+    const grad    = ftEntry ? ftEntry.grad : 'linear-gradient(135deg,#1e293b,#334155)';
+    headerHtml = `
+      <div class="file-card-face" style="background:${grad}">
+        <div class="file-card-emoji">${tc.icon}</div>
+        <div class="file-card-fname">${esc(ref.fileName || '')}</div>
+        <div class="file-card-size">${ref.fileSize ? fmtFileSize(ref.fileSize) : ''}</div>
+      </div>`;
+  } else if (ref.thumbnail) {
+    headerHtml = `
+      <img class="card-thumb" src="${esc(ref.thumbnail)}" loading="lazy" alt=""
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="card-thumb-placeholder" style="display:none">${tc.icon}</div>`;
+  } else {
+    headerHtml = `<div class="card-thumb-placeholder">${tc.icon}</div>`;
+  }
 
-  // Tags row
+  // ── Tags ───────────────────────────────────────────────────────────
   const tagsHtml = (ref.tags || []).length
     ? `<div class="card-tags">${ref.tags.map(t =>
         `<span class="tag-pill" onclick="event.stopPropagation();toggleTag('${esc(t)}')">#${esc(t)}</span>`
       ).join('')}</div>`
     : '';
 
-  // Collection chip
+  // ── Collection chip ────────────────────────────────────────────────
   const colHtml = col
     ? `<span class="col-pill" style="background:${col.color}" title="${esc(col.name)}">${esc(col.name)}</span>`
     : '';
 
+  // ── Download hint for file cards ───────────────────────────────────
+  const actionHint = ref.isFile
+    ? `<span style="font-size:10px;color:var(--text-faint);margin-left:auto">↓ click to download</span>`
+    : `<span class="card-date">${fmtDate(ref.savedAt)}</span>`;
+
   return `
     <div class="ref-card" onclick="openRef('${ref.id}')">
-      ${thumbHtml}
+      ${headerHtml}
       <div class="card-top-badges">
         <span class="type-badge" style="background:${tc.color};backdrop-filter:blur(6px)">${tc.label}</span>
         <div class="card-actions" onclick="event.stopPropagation()">
-          <button class="qbtn" title="Edit"      onclick="openEditModal('${ref.id}')">✎</button>
-          <button class="qbtn" title="Move"      onclick="openMoveModal('${ref.id}')">⇄</button>
+          <button class="qbtn" title="Edit"       onclick="openEditModal('${ref.id}')">✎</button>
+          <button class="qbtn" title="Move"       onclick="openMoveModal('${ref.id}')">⇄</button>
           <button class="qbtn del" title="Delete" onclick="askDelete('${ref.id}')">🗑</button>
         </div>
       </div>
       <div class="card-body">
-        <div class="card-title">${esc(ref.title || 'Untitled')}</div>
+        <div class="card-title">${esc(ref.title || ref.fileName || 'Untitled')}</div>
         ${ref.description ? `<div class="card-desc">${esc(ref.description)}</div>` : ''}
         ${tagsHtml}
         <div class="card-footer">
           ${colHtml}
           <span class="card-date">${fmtDate(ref.savedAt)}</span>
+          ${ref.isFile ? `<span style="font-size:10px;color:var(--text-faint);margin-left:auto">↓ download</span>` : ''}
         </div>
       </div>
     </div>`;
@@ -2128,7 +2515,16 @@ function setView(v) {
 
 function openRef(id) {
   const ref = S.refs.find(r => r.id === id);
-  if (ref) window.open(ref.url, '_blank', 'noopener,noreferrer');
+  if (!ref) return;
+  if (ref.isFile && ref.fileData) {
+    // Trigger a download of the stored file
+    const a = document.createElement('a');
+    a.href     = ref.fileData;
+    a.download = ref.fileName || ref.title || 'download';
+    a.click();
+  } else if (ref.url) {
+    window.open(ref.url, '_blank', 'noopener,noreferrer');
+  }
 }
 
 /* ================================================================
@@ -2278,6 +2674,13 @@ function fmtDate(str) {
   if (days < 30) return `${Math.floor(days/7)}w ago`;
   if (days < 365) return d.toLocaleDateString('en', { month:'short', day:'numeric' });
   return d.toLocaleDateString('en', { year:'numeric', month:'short', day:'numeric' });
+}
+
+/** Format a byte count as human-readable string (e.g. "1.4 MB") */
+function fmtFileSize(bytes) {
+  if (bytes < 1024)        return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 /** getElementById shorthand */
