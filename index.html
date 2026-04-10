@@ -1119,7 +1119,7 @@
     #grid.list .file-card-fname { display: none; }
     #grid.list .file-card-size  { display: none; }
 
-    /* Sidebar overlay (mobile) */
+    /* Sidebar overlay (desktop only) */
     #sidebar-veil {
       display: none;
       position: fixed;
@@ -1129,26 +1129,256 @@
     }
 
     /* ================================================================
-       RESPONSIVE
+       MOBILE SEARCH BAR
+    ================================================================ */
+    #mobile-search-bar {
+      display: none;
+    }
+
+    /* ================================================================
+       MOBILE COLLECTIONS ROW
+    ================================================================ */
+    #mobile-collections {
+      display: none;
+    }
+
+    /* ================================================================
+       BOTTOM NAVIGATION
+    ================================================================ */
+    #bottom-nav {
+      display: none;
+    }
+
+    /* Mobile search icon (topbar) */
+    #mobile-search-btn { display: none; }
+
+    /* ================================================================
+       RESPONSIVE — MOBILE (≤ 660px)
     ================================================================ */
     @media (max-width: 660px) {
-      #sidebar {
-        position: fixed;
-        left: 0; top: 0;
-        height: 100vh;
-        transform: translateX(-100%);
+
+      /* Hide desktop sidebar entirely on mobile */
+      #sidebar { display: none !important; }
+      #sidebar-veil { display: none !important; }
+      #menu-toggle { display: none !important; }
+
+      /* Topbar: slim, just title + actions */
+      #topbar {
+        padding: 0 14px;
+        height: 52px;
+        gap: 8px;
+        justify-content: space-between;
       }
-      #sidebar.open { transform: translateX(0); }
-      #sidebar-veil.show { display: block; }
-      #menu-toggle { display: flex; }
-      #grid { grid-template-columns: 1fr; }
-      .form-row { grid-template-columns: 1fr; }
-      .topbar-title { display: none; }
-      #topbar { padding: 10px 14px; gap: 8px; }
-      #content { padding: 14px; }
+      .topbar-title {
+        display: block;
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        flex: 1;
+      }
+      .search-wrap { display: none; }
+      #mobile-search-btn {
+        display: flex;
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+        flex-shrink: 0;
+      }
+      .topbar-actions { gap: 4px; }
+
+      /* Mobile search bar — slides down below topbar */
+      #mobile-search-bar {
+        display: block;
+        overflow: hidden;
+        max-height: 0;
+        transition: max-height 0.25s var(--ease), padding 0.25s var(--ease);
+        padding: 0 14px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      #mobile-search-bar.open {
+        max-height: 64px;
+        padding: 10px 14px;
+      }
+      #mobile-search-input {
+        width: 100%;
+        padding: 10px 14px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--text);
+        font-size: 15px;
+        font-family: inherit;
+        outline: none;
+        -webkit-appearance: none;
+        transition: border-color var(--t);
+      }
+      #mobile-search-input:focus { border-color: var(--accent); }
+      #mobile-search-input::placeholder { color: var(--text-faint); }
+
+      /* Mobile collections row — horizontal scroll */
+      #mobile-collections {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        border-bottom: 1px solid var(--border-subtle);
+        flex-shrink: 0;
+        background: var(--surface);
+      }
+      #mobile-collections::-webkit-scrollbar { display: none; }
+      .mcol-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text-muted);
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+        cursor: pointer;
+        min-height: 36px;
+        flex-shrink: 0;
+        transition: border-color var(--t), color var(--t), background var(--t);
+      }
+      .mcol-pill.active {
+        background: var(--accent-glow);
+        border-color: var(--accent);
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .mcol-col-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      /* Content & grid */
+      #content {
+        padding: 14px;
+        padding-bottom: calc(14px + 64px + env(safe-area-inset-bottom, 0px));
+      }
       #tag-bar { padding: 8px 14px 0; }
-      .modal { border-radius: 12px; }
-      #toasts { right: 12px; bottom: 14px; }
+      #statusbar { display: none; }
+      #grid { grid-template-columns: 1fr; gap: 12px; }
+      .form-row { grid-template-columns: 1fr; }
+
+      /* Cards: no hover lift on touch, actions always visible */
+      .ref-card:hover { transform: none; box-shadow: none; }
+      .card-body { padding: 12px 14px; }
+      .card-title { font-size: 14px; }
+      .card-actions { opacity: 1; }
+
+      /* Bottom navigation bar */
+      #bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: calc(60px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        z-index: 200;
+        align-items: center;
+        justify-content: space-around;
+        padding-left: 4px;
+        padding-right: 4px;
+      }
+      .bnav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        min-width: 52px;
+        min-height: 44px;
+        background: none;
+        border: none;
+        color: var(--text-faint);
+        cursor: pointer;
+        padding: 4px 8px;
+        transition: color var(--t);
+        border-radius: var(--radius-sm);
+        font-family: inherit;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .bnav-item.active { color: var(--accent); }
+      .bnav-icon { font-size: 20px; line-height: 1; }
+      .bnav-label { font-size: 10px; font-weight: 500; letter-spacing: 0.2px; }
+      .bnav-add {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 54px;
+        height: 54px;
+        background: var(--accent);
+        border: none;
+        border-radius: 16px;
+        color: #fff;
+        font-size: 30px;
+        font-weight: 300;
+        line-height: 1;
+        cursor: pointer;
+        box-shadow: 0 4px 16px rgba(99,102,241,0.45);
+        transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
+        margin-top: -10px;
+        flex-shrink: 0;
+        font-family: inherit;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .bnav-add:active {
+        transform: scale(0.93);
+        box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+      }
+
+      /* Bottom sheet modals */
+      .overlay {
+        align-items: flex-end;
+        padding: 0;
+      }
+      .modal {
+        border-radius: 20px 20px 0 0;
+        max-width: 100%;
+        width: 100%;
+        max-height: 92vh;
+        transform: translateY(100%);
+        transition: transform 0.3s var(--ease);
+      }
+      .overlay.open .modal {
+        transform: translateY(0);
+      }
+      .modal.sm,
+      .modal.xs { max-width: 100%; }
+
+      /* Drag handle on bottom sheet */
+      .modal::before {
+        content: '';
+        display: block;
+        width: 40px;
+        height: 4px;
+        background: var(--border);
+        border-radius: 2px;
+        margin: 12px auto 4px;
+      }
+      .modal-head { padding-top: 12px; }
+
+      /* Toast position above bottom nav */
+      #toasts {
+        left: 12px;
+        right: 12px;
+        bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+      }
+      .toast { max-width: 100%; }
     }
   </style>
 </head>
@@ -1227,10 +1457,21 @@
                oninput="onSearch(this.value)" autocomplete="off">
       </div>
       <div class="topbar-actions">
+        <button class="icon-btn" id="mobile-search-btn" title="Search" onclick="toggleMobileSearch()">🔍</button>
         <button class="icon-btn active" id="btn-grid" title="Grid view" onclick="setView('grid')">⊞</button>
         <button class="icon-btn" id="btn-list" title="List view" onclick="setView('list')">≡</button>
       </div>
     </div>
+
+    <!-- Mobile: expandable search bar -->
+    <div id="mobile-search-bar">
+      <input type="search" id="mobile-search-input"
+             placeholder="Search titles, descriptions, tags…"
+             oninput="onSearch(this.value)" autocomplete="off">
+    </div>
+
+    <!-- Mobile: horizontal collections row -->
+    <div id="mobile-collections"></div>
 
     <!-- Active tag filters -->
     <div id="tag-bar"></div>
@@ -1493,6 +1734,29 @@
 
 <!-- Toast container -->
 <div id="toasts"></div>
+
+<!-- ================================================================
+     BOTTOM NAVIGATION (mobile only)
+================================================================ -->
+<nav id="bottom-nav">
+  <button class="bnav-item active" id="bnav-home" onclick="bnavHome()">
+    <span class="bnav-icon">⌂</span>
+    <span class="bnav-label">Home</span>
+  </button>
+  <button class="bnav-item" id="bnav-search" onclick="bnavSearch()">
+    <span class="bnav-icon">🔍</span>
+    <span class="bnav-label">Search</span>
+  </button>
+  <button class="bnav-add" onclick="openAddModal()" aria-label="Add reference">+</button>
+  <button class="bnav-item" id="bnav-collections" onclick="bnavCollections()">
+    <span class="bnav-icon">🗂</span>
+    <span class="bnav-label">Collections</span>
+  </button>
+  <button class="bnav-item" id="bnav-settings" onclick="openSettings()">
+    <span class="bnav-icon">⚙</span>
+    <span class="bnav-label">Settings</span>
+  </button>
+</nav>
 
 <!-- ================================================================
      JAVASCRIPT
@@ -2297,6 +2561,8 @@ function pickColor(c) { S.pickedColor = c; renderSwatches(); }
 
 function renderAll() {
   renderSidebar();
+  renderMobileCollections();
+  syncBottomNav();
   renderRefs();
 }
 
@@ -2481,6 +2747,8 @@ function applyFilter(type, val, el) {
   }
   $('topbar-title').textContent = title;
 
+  renderMobileCollections();
+  syncBottomNav();
   renderRefs();
   closeMobileSidebar();
 }
@@ -2603,7 +2871,7 @@ function fillColSelect(selId, selectedId = '') {
 }
 
 /* ================================================================
-   MOBILE SIDEBAR
+   MOBILE SIDEBAR (desktop fallback — not used on mobile)
 ================================================================ */
 
 function toggleMobileSidebar() {
@@ -2613,6 +2881,89 @@ function toggleMobileSidebar() {
 function closeMobileSidebar() {
   $('sidebar').classList.remove('open');
   $('sidebar-veil').classList.remove('show');
+}
+
+/* ================================================================
+   MOBILE UI
+================================================================ */
+
+let _mobileSearchOpen = false;
+
+function toggleMobileSearch() {
+  _mobileSearchOpen = !_mobileSearchOpen;
+  const bar = $('mobile-search-bar');
+  bar.classList.toggle('open', _mobileSearchOpen);
+  $('mobile-search-btn').classList.toggle('active', _mobileSearchOpen);
+  document.querySelector('#bnav-search')?.classList.toggle('active', _mobileSearchOpen);
+  if (_mobileSearchOpen) {
+    $('mobile-search-input').focus();
+    $('mobile-search-input').value = S.search;
+  } else {
+    onSearch('');
+    $('mobile-search-input').value = '';
+  }
+}
+
+function bnavHome() {
+  applyFilter('collection', 'all', null);
+  updateBottomNav('home');
+  if (_mobileSearchOpen) toggleMobileSearch();
+}
+
+function bnavSearch() {
+  toggleMobileSearch();
+  if (_mobileSearchOpen) updateBottomNav('search');
+  else updateBottomNav('home');
+}
+
+function bnavCollections() {
+  const row = $('mobile-collections');
+  if (row) row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  updateBottomNav('collections');
+  setTimeout(() => syncBottomNav(), 400);
+}
+
+function updateBottomNav(activeId) {
+  ['home','search','collections'].forEach(id => {
+    document.querySelector('#bnav-' + id)?.classList.remove('active');
+  });
+  if (activeId) document.querySelector('#bnav-' + activeId)?.classList.add('active');
+}
+
+function syncBottomNav() {
+  // Reflect current filter in bottom nav
+  if (S.filter.type === 'collection' && S.filter.val === 'all') {
+    updateBottomNav('home');
+  } else if (S.filter.type === 'collection' || S.filter.type === 'type') {
+    updateBottomNav('collections');
+  }
+  if (_mobileSearchOpen) document.querySelector('#bnav-search')?.classList.add('active');
+}
+
+function renderMobileCollections() {
+  const el = $('mobile-collections');
+  if (!el) return;
+
+  const isActive = (type, val) => S.filter.type === type && S.filter.val === val;
+
+  const pills = [
+    `<button class="mcol-pill ${isActive('collection','all') ? 'active' : ''}"
+             onclick="applyFilter('collection','all',null)">
+       <span>🗃</span><span>All</span>
+     </button>`
+  ];
+
+  S.cols.forEach(col => {
+    pills.push(
+      `<button class="mcol-pill ${isActive('collection', col.id) ? 'active' : ''}"
+               onclick="applyFilter('collection','${col.id}',null)">
+         <span class="mcol-col-dot" style="background:${col.color}"></span>
+         <span>${esc(col.name)}</span>
+       </button>`
+    );
+  });
+
+  el.innerHTML = pills.join('');
 }
 
 /* ================================================================
