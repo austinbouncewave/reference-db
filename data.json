@@ -1,5 +1,19 @@
 {
-  "references": [],
+  "references": [
+    {
+      "id": "mnsgsbd8zus7",
+      "isFile": false,
+      "url": "https://www.youtube.com/watch?v=PsBCRlLTIFQ&t=2032s",
+      "title": "Claude Code: Landing Page to Lead Magnet in 50 Minutes",
+      "description": "",
+      "thumbnail": "https://img.youtube.com/vi/PsBCRlLTIFQ/maxresdefault.jpg",
+      "type": "youtube",
+      "collectionId": null,
+      "tags": [],
+      "savedAt": "2026-04-10T05:27:31.724Z",
+      "updatedAt": "2026-04-10T05:27:31.726Z"
+    }
+  ],
   "collections": [],
-  "lastUpdated": null
+  "lastUpdated": "2026-04-10T05:27:31.727Z"
 }
