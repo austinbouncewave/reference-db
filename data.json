@@ -1,6 +1,19 @@
 {
   "references": [
     {
+      "id": "mntoubi0y6hk",
+      "isFile": false,
+      "url": "https://youtu.be/nSq67XVqU6Q?si=XZbf6wkKNSfgdQ3g",
+      "title": "The 4 AI Files That Make Every Claude Skill 10x Better (Free Templates)",
+      "description": "",
+      "thumbnail": "https://img.youtube.com/vi/nSq67XVqU6Q/maxresdefault.jpg",
+      "type": "youtube",
+      "collectionId": null,
+      "tags": [],
+      "savedAt": "2026-04-11T02:00:48.312Z",
+      "updatedAt": "2026-04-11T02:00:48.312Z"
+    },
+    {
       "id": "mnsgsbd8zus7",
       "isFile": false,
       "url": "https://www.youtube.com/watch?v=PsBCRlLTIFQ&t=2032s",
@@ -15,5 +28,5 @@
     }
   ],
   "collections": [],
-  "lastUpdated": "2026-04-10T05:27:31.727Z"
+  "lastUpdated": "2026-04-11T02:00:48.314Z"
 }
