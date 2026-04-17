@@ -1,6 +1,19 @@
 {
   "references": [
     {
+      "id": "mo2dr8uoiajo",
+      "isFile": false,
+      "url": "https://21st.dev/community/components",
+      "title": "Discover community-made UI components | 21st",
+      "description": "Explore, copy, and remix thousands of high-quality React components published to the 21st.dev Community by designers and developers.",
+      "thumbnail": "https://21st.dev/opengraph-image.png",
+      "type": "article",
+      "collectionId": null,
+      "tags": [],
+      "savedAt": "2026-04-17T04:00:24.720Z",
+      "updatedAt": "2026-04-17T04:00:24.722Z"
+    },
+    {
       "id": "mo0gz3ixo6ne",
       "isFile": false,
       "url": "https://www.youtube.com/watch?v=wea6aSjclIo&t=3s",
@@ -17,7 +30,7 @@
       "id": "mnz992squvt0",
       "isFile": false,
       "url": "https://buymypartyrentalbusiness.beehiiv.com/p/25-for-tent-mapper-are-you-kidding-me?fbclid=IwZnRzaARLrVlleHRuA2FlbQIxMQBzcnRjBmFwcF9pZAo2NjI4NTY4Mzc5AAEexBkIBCBqLbZXQ1wJ7lwZWMZOg6CgGvuaZdfVJ0Xt4OHcgQyo5sBEgeWnqBk_aem_at7gay66N7j1BYwWl9MA3A&utm_id=97758_v0_s00_e0_tv0",
-      "title": "$25 for Tent Mapperâ¦ Are You Kidding Me??",
+      "title": "$25 for Tent MapperÃ¢ÂÂ¦ Are You Kidding Me??",
       "description": "tent rental seating layout software",
       "thumbnail": "https://beehiiv-images-production.s3.amazonaws.com/uploads/asset/file/bc89cdd8-da1a-4cf1-9d9a-cf26116ba84d/ChatGPT_Image_Apr_14__2026__07_21_00_PM.png?t=1776208887",
       "type": "article",
@@ -30,7 +43,7 @@
       "id": "mntwpmpfphjc",
       "isFile": false,
       "url": "https://www.thevibemarketer.com/skills",
-      "title": "Vibe Skills Ã¢ÂÂ Marketing Methodology for Claude",
+      "title": "Vibe Skills ÃÂ¢ÃÂÃÂ Marketing Methodology for Claude",
       "description": "Turn Claude into a marketing team that actually sells. 10 marketing skills. $199 once, lifetime access.",
       "thumbnail": "https://res.cloudinary.com/dzkwltgyd/image/upload/v1766084167/glif-run-outputs/siy1wychmsagfrdkyggr.png",
       "type": "article",
@@ -44,7 +57,7 @@
       "isFile": false,
       "url": "https://www.thevibemarketer.com/vibe-marketing-playbook-v2.html",
       "title": "The Vibe Marketing Playbook | Interactive Guide",
-      "description": "Process over prompts. Systems over shortcuts. The complete framework for building marketing systems with AIÃ¢ÂÂfrom research to revenue.",
+      "description": "Process over prompts. Systems over shortcuts. The complete framework for building marketing systems with AIÃÂ¢ÃÂÃÂfrom research to revenue.",
       "thumbnail": null,
       "type": "article",
       "collectionId": null,
@@ -93,5 +106,5 @@
     }
   ],
   "collections": [],
-  "lastUpdated": "2026-04-15T19:54:57.564Z"
+  "lastUpdated": "2026-04-17T04:00:24.724Z"
 }
