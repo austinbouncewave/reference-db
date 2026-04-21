@@ -1,6 +1,19 @@
 {
   "references": [
     {
+      "id": "mo96r9nd1b95",
+      "isFile": false,
+      "url": "https://github.com/VoltAgent/awesome-claude-design?fbclid=IwZnRzaARU1vVleHRuA2FlbQIxMQBzcnRjBmFwcF9pZAo2NjI4NTY4Mzc5AAEeLgKfYM5sidimosZCbvq7ryHnx8tbax7x7v-4YFDYSVekRRg0qU2Owuvpc70_aem_qQJnadywJ80DW6r-Q5lOdQ",
+      "title": "GitHub - VoltAgent/awesome-claude-design: Awesome Claude Design: 68 ready-to-use design system inspirations in DESIGN.md format. Drop one in, scaffold a full UI in one shot.",
+      "description": "Awesome Claude Design: 68 ready-to-use design system inspirations in DESIGN.md format. Drop one in, scaffold a full UI in one shot. - VoltAgent/awesome-claude-design",
+      "thumbnail": "https://opengraph.githubassets.com/9aedf586907af006a73c1bbeaae826a1f923b3aee6a3a5489273ce922c3cb4a7/VoltAgent/awesome-claude-design",
+      "type": "github",
+      "collectionId": null,
+      "tags": [],
+      "savedAt": "2026-04-21T22:18:51.673Z",
+      "updatedAt": "2026-04-21T22:18:51.674Z"
+    },
+    {
       "id": "mo93t0s80gvw",
       "isFile": false,
       "url": "https://studio2am.co/",
@@ -145,5 +158,5 @@
     }
   ],
   "collections": [],
-  "lastUpdated": "2026-04-21T20:56:14.652Z"
+  "lastUpdated": "2026-04-21T22:18:51.684Z"
 }
