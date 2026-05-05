@@ -1,6 +1,19 @@
 {
   "references": [
     {
+      "id": "motaehlru0vg",
+      "isFile": false,
+      "url": "https://webon.gumroad.com/l/canvaai",
+      "title": "10 Best Canva AI Text Prompts with Examples",
+      "description": "Create stunning text designs in seconds with Canva’s AI using this ready-to-use pack of 10 powerful text prompts!This pack is perfect for designers, content creators, and marketers who want to quickly generate creative text effects without wasting time guessing the right prompt.📦 What’s Included: 10 folders (one for each AI text prompt) Each folder includes: 🧠 The Canva AI text prompt ✨ 2 design examples created with that prompt File format: .RAR (easy to extract and organize)",
+      "thumbnail": "https://public-files.gumroad.com/slo3q8h5f7qh7umikhrr5f8z1fp2",
+      "type": "website",
+      "collectionId": null,
+      "tags": [],
+      "savedAt": "2026-05-05T23:56:17.439Z",
+      "updatedAt": "2026-05-05T23:56:17.439Z"
+    },
+    {
       "id": "mo96r9nd1b95",
       "isFile": false,
       "url": "https://github.com/VoltAgent/awesome-claude-design?fbclid=IwZnRzaARU1vVleHRuA2FlbQIxMQBzcnRjBmFwcF9pZAo2NjI4NTY4Mzc5AAEeLgKfYM5sidimosZCbvq7ryHnx8tbax7x7v-4YFDYSVekRRg0qU2Owuvpc70_aem_qQJnadywJ80DW6r-Q5lOdQ",
@@ -145,5 +158,5 @@
     }
   ],
   "collections": [],
-  "lastUpdated": "2026-05-05T23:55:20.623Z"
+  "lastUpdated": "2026-05-05T23:56:17.443Z"
 }
